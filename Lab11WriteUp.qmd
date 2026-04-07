@@ -217,8 +217,12 @@ p4 <- make_plots("exponential")
 ## Simulation over various sample sizes
 Consider the effect of the sample size have on these results. Provide a graphical and numerical summary of what happens as $n$ increases -- say $n=20$, $n=50$, $n=100$, and $n=500$. Does the result in your initial simulation hold across samples? Or, do things change as the sample size changes? Ensure to set your randomization seed.
  
+solution:
+```{r}
 
- 
+```
+
+
 ## Simulation
 You have written code to draw a random sample of various sizes from each distribution, and to calculate and store the calculated estimates. Rework your code to produce a density plot of the $s_{n-1}^2$ and $s_{n}^2$. Do you have a guess about their distribution? Ensure to set your randomization seed. 
 
