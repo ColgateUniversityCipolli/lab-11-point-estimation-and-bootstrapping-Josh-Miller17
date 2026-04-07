@@ -105,8 +105,119 @@ Create a plot or combination of plots (using patchwork) to show the results acro
 \textrm{Mean Square Error} &= \textrm{Bias}^2 + \textrm{Variance of Estimates}.
 \end{align*}
 
+Solution:
+```{r}
+library(tidyverse)
+library(patchwork)
+set.seed(7272)
+
+# inputed all of the data from the question
+n <- 20
+loop_reps <- 1000
+true_variance <- 2
+
+# created function for both estimators (from intro)
+sample_variances <- function(x){
+  xbar <- mean(x)
+  s2_n1 <- (1/(length(x)-1)) * sum((x - xbar)^2) # created s2_n-1
+  s2_n <- mean((x - xbar)^2)                     # created s2_n 
+  return(c(s2_n = s2_n, s2_n1 = s2_n1))
+}
+
+# Poisson part
+# created empty matrix to be iterated
+poisson <- matrix(NA, nrow = loop_reps, ncol = 2)
+# created loop that runs 1000 times that generate a sample of size n, calc and save estimators
+for (i in 1:loop_reps){
+  x <- rpois(n, lambda = 2)
+  poisson[i, ] <- sample_variances(x)
+}
+poisson_df <- data.frame(poisson) # created dataframe with results from function above
+names(poisson_df) <- c("s2_n", "s2_n1")
+poisson_df$dist <- "poisson"
+
+# Binomial part
+p <- (5 - sqrt(21)) / 10 # inputed p parameter from lab
+# created empty matrix to be iterated
+binom <- matrix(NA, nrow = loop_reps, ncol = 2)
+# created loop that runs 1000 times that generate a sample of size n, calc and save estimators
+for (i in 1:loop_reps){
+  x <- rbinom(n, size = 50, prob = p)
+  binom[i, ] <- sample_variances(x)
+}
+binom_df <- data.frame(binom) # created dataframe with results from function
+names(binom_df) <- c("s2_n", "s2_n1")
+binom_df$dist <- "binomial"
+
+# Normal part
+# created empty matrix to be iterated
+normal <- matrix(NA, nrow = loop_reps, ncol = 2)
+# created loop that runs 1000 times that generate a sample of size n, calc and save estimators
+for (i in 1:loop_reps){
+  x <- rnorm(n, mean = 0, sd = sqrt(2))
+  normal[i, ] <- sample_variances(x)
+}
+normal_df <- data.frame(normal) # created dataframe with results from function
+names(normal_df) <- c("s2_n", "s2_n1")
+normal_df$dist <- "normal"
+
+# Exponential part
+# created empty matrix to be iterated
+exp <- matrix(NA, nrow = loop_reps, ncol = 2)
+# created loop that runs 1000 times that generate a sample of size n, calc and save estimators
+for (i in 1:loop_reps){
+  x <- rexp(n, rate = sqrt(1/2))
+  exp[i, ] <- sample_variances(x)
+}
+exp_df <- data.frame(exp) # created dataframe with results from function
+names(exp_df) <- c("s2_n", "s2_n1")
+exp_df$dist <- "exponential"
+
+# combined my results into one dataframe
+results <- rbind(poisson_df, binom_df, normal_df, exp_df)
+
+# reshaped results into long formatted table
+results_long <- results |>
+  pivot_longer(cols = c(s2_n, s2_n1),
+               names_to = "Estimator",
+               values_to = "Value")
+
+# created table with all my data:
+summary_table <- results_long |>
+  group_by(dist, Estimator) |>
+  summarize(
+    mean_est = mean(Value),
+    bias = mean_est - true_variance,
+    precision = 1/var(Value),
+    MSE = bias^2 + var(Value)
+  )
+summary_table
+
+# created plots
+make_plots <- function(y) {
+  ggplot(results_long[results_long$dist == y, ]) +
+    stat_density(aes(x = Value, color = Estimator),
+                 geom = "line", linewidth = 1, position="dodge") +
+    geom_vline(xintercept = true_variance, color = "red", linetype = "dotted") +
+    geom_hline(yintercept = 0) +
+    theme_bw() +
+    labs(title = y, x = "Variance Estimate", y = "Density")
+}
+
+p1 <- make_plots("poisson")
+p2 <- make_plots("binomial")
+p3 <- make_plots("normal")
+p4 <- make_plots("exponential")
+
+
+(p1 | p2) / (p3 | p4)
+
+```
+
 ## Simulation over various sample sizes
 Consider the effect of the sample size have on these results. Provide a graphical and numerical summary of what happens as $n$ increases -- say $n=20$, $n=50$, $n=100$, and $n=500$. Does the result in your initial simulation hold across samples? Or, do things change as the sample size changes? Ensure to set your randomization seed.
+ 
+
  
 ## Simulation
 You have written code to draw a random sample of various sizes from each distribution, and to calculate and store the calculated estimates. Rework your code to produce a density plot of the $s_{n-1}^2$ and $s_{n}^2$. Do you have a guess about their distribution? Ensure to set your randomization seed. 
