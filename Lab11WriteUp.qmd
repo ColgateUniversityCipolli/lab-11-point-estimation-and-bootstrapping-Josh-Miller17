@@ -431,6 +431,99 @@ The density plots for both s2_n and s2_n-1 are right skewed. Based off what we l
 Now, take *one* sample from each distribution. Instead of drawing a random sample at each iteration, sample *with replacement* from the one sample. Produce a density plot of the $s_{n-1}^2$ and $s_{n}^2$. Do we get roughly the same information as we do in the full simulation? Try this over several seeds -- what do you notice? Ensure to set your randomization seed.
 
 Solution:
+```{r}
+library(tidyverse)
+library(patchwork)
+set.seed(7272)
+
+# inputed all of the data from the question
+n <- 20
+loop_reps <- 1000
+
+# created function for both estimators (same as 2.1)
+sample_variances <- function(x){
+  xbar <- mean(x)
+  s2_n1 <- (1/(length(x)-1)) * sum((x - xbar)^2) # created s2_n-1
+  s2_n <- mean((x - xbar)^2)                     # created s2_n 
+  return(c(s2_n = s2_n, s2_n1 = s2_n1))
+}
+
+# Poisson part 
+# generated one random sample from poisson distribution
+poisson <- rpois(n, lambda = 2)
+# created empty matrix to be appended by bootstrapped fucntion
+poisson_boot <- matrix(NA, nrow = loop_reps, ncol = 2)
+for (i in 1:loop_reps){
+  x_bootstrapped <- sample(poisson, size = n, replace = TRUE) # did the resampling to create a bootstrapped sample (same as in class)
+  poisson_boot[i, ] <- sample_variances(x_bootstrapped)
+}
+
+poisson_df <- data.frame(poisson_boot) # created dataframe with results from function above
+names(poisson_df) <- c("s2_n", "s2_n1")
+poisson_df$dist <- "poisson"
+
+# Binomial part 
+# generated one random sample from binomial distribution
+p <- (5 - sqrt(21))/10
+binomial <- rbinom(n, size = 50, prob = p)
+# created empty matrix to be appended by bootstrapped fucntion
+binom_boot <- matrix(NA, nrow = loop_reps, ncol = 2)
+for (i in 1:loop_reps){
+  x_bootstrapped <- sample(binomial, size = n, replace = TRUE) # did the resampling to create a bootstrapped sample (same as in class)
+  binom_boot[i, ] <- sample_variances(x_bootstrapped)
+}
+
+binom_df <- data.frame(binom_boot) # created dataframe with results from function above
+names(binom_df) <- c("s2_n", "s2_n1")
+binom_df$dist <- "binomial"
+
+# Normal part 
+# generated one random sample from normal distribution
+normal <- rnorm(n, mean = 0, sd = sqrt(2))
+# created empty matrix to be appended by bootstrapped fucntion
+normal_boot <- matrix(NA, nrow = loop_reps, ncol = 2)
+for (i in 1:loop_reps){
+  x_bootstrapped <- sample(normal, size = n, replace = TRUE) # did the resampling to create a bootstrapped sample (same as in class)
+  normal_boot[i, ] <- sample_variances(x_bootstrapped)
+}
+
+normal_df <- data.frame(normal_boot) # created dataframe with results from function above
+names(normal_df) <- c("s2_n", "s2_n1")
+normal_df$dist <- "normal"
+
+# Exponential part 
+# generated one random sample from exponential distribution
+exp <- rexp(n, rate = sqrt(1/2))
+# created empty matrix to be appended by bootstrapped fucntion
+exp_boot <- matrix(NA, nrow = loop_reps, ncol = 2)
+for (i in 1:loop_reps){
+  x_bootstrapped <- sample(exp, size = n, replace = TRUE) # did the resampling to create a bootstrapped sample (same as in class)
+  exp_boot[i, ] <- sample_variances(x_bootstrapped)
+}
+
+exp_df <- data.frame(exp_boot) # created dataframe with results from function above
+names(exp_df) <- c("s2_n", "s2_n1")
+exp_df$dist <- "exponential"
+
+# combined my results into one dataframe (same as 2.1)
+results <- rbind(poisson_df, binom_df, normal_df, exp_df)
+
+# reshaped results into long formatted table (same as 2.1)
+results_long <- results |>
+  pivot_longer(cols = c(s2_n, s2_n1),
+               names_to = "Estimator",
+               values_to = "Value")
+
+# created the density plot (same as 2.3):
+ggplot(results_long) + 
+  stat_density(aes(x = Value, color = Estimator), 
+              geom="line", linewidth = 1) +
+  geom_vline(xintercept = 2, color = "red", linetype="dotted") +
+  geom_hline(yintercept = 0) +
+  facet_wrap(~ dist) +
+  theme_bw() +
+  labs(x = "Variance Estimate", y = "Density")
+```
 
 # Executive Summary
 Summarize the work you've done here to provide a brief (200-300 word) summary of the simulation and the results using your work in Lab 11. Your summary should be professional, clear, and all claims should be corroborated with statistical support.
