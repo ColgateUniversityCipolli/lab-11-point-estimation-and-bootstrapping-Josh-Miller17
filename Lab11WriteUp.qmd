@@ -219,6 +219,118 @@ Consider the effect of the sample size have on these results. Provide a graphica
  
 solution:
 ```{r}
+library(tidyverse)
+library(patchwork)
+set.seed(7272)
+
+# inputed all of the data from the question
+n_values <- c(20, 50, 100, 500) # created vector of different n's
+loop_reps <- 1000
+true_variance <- 2
+
+# created function for both estimators (from intro)
+sample_variances <- function(x){
+  xbar <- mean(x)
+  s2_n1 <- (1/(length(x)-1)) * sum((x - xbar)^2) # created s2_n-1
+  s2_n <- mean((x - xbar)^2)                     # created s2_n 
+  return(c(s2_n = s2_n, s2_n1 = s2_n1))
+}
+
+# created empty dataframe for results to be stored
+results <- data.frame()
+
+for (n in n_values){
+  # poisson part (almost same as 2.1, added n column in dataframe)
+  poisson <- matrix(NA, nrow = loop_reps, ncol = 2)
+  # created loop that runs 1000 times that generate a sample of size n, calc and save estimators
+  for (i in 1:loop_reps){
+    x <- rpois(n, lambda = 2)
+    poisson[i, ] <- sample_variances(x)
+  }
+  poisson_df <- data.frame(poisson) # created dataframe with results from function above
+  names(poisson_df) <- c("s2_n", "s2_n1")
+  poisson_df$dist <- "poisson"
+  poisson_df$n <- n 
+
+  # Binomial part (almost same as 2.1, added n column in dataframe)
+  p <- (5 - sqrt(21)) / 10 # inputed p parameter from lab
+  # created empty matrix to be iterated
+  binom <- matrix(NA, nrow = loop_reps, ncol = 2)
+  # created loop that runs 1000 times that generate a sample of size n, calc and save estimators
+  for (i in 1:loop_reps){
+    x <- rbinom(n, size = 50, prob = p)
+    binom[i, ] <- sample_variances(x)
+  }
+  binom_df <- data.frame(binom) # created dataframe with results from function
+  names(binom_df) <- c("s2_n", "s2_n1")
+  binom_df$dist <- "binomial"
+  binom_df$n <- n
+
+  # Normal part (almost same as 2.1, added n column in dataframe)
+  # created empty matrix to be iterated
+  normal <- matrix(NA, nrow = loop_reps, ncol = 2)
+  # created loop that runs 1000 times that generate a sample of size n, calc and save estimators
+  for (i in 1:loop_reps){
+    x <- rnorm(n, mean = 0, sd = sqrt(2))
+    normal[i, ] <- sample_variances(x)
+  }
+  normal_df <- data.frame(normal) # created dataframe with results from function
+  names(normal_df) <- c("s2_n", "s2_n1")
+  normal_df$dist <- "normal"
+  normal_df$n <- n
+
+  # Exponential part (almost same as 2.1, added n column in dataframe)
+  # created empty matrix to be iterated
+  exp <- matrix(NA, nrow = loop_reps, ncol = 2)
+  # created loop that runs 1000 times that generate a sample of size n, calc and save estimators
+  for (i in 1:loop_reps){
+    x <- rexp(n, rate = sqrt(1/2))
+    exp[i, ] <- sample_variances(x)
+  }
+  exp_df <- data.frame(exp) # created dataframe with results from function
+  names(exp_df) <- c("s2_n", "s2_n1")
+  exp_df$dist <- "exponential"
+  exp_df$n <- n
+
+  # append results
+  results <- rbind(results, poisson_df, binom_df, normal_df, exp_df)
+}
+
+# reshaped results into long formatted table (same as 2.1)
+results_long <- results |>
+  pivot_longer(cols = c(s2_n, s2_n1),
+               names_to = "Estimator",
+               values_to = "Value")
+
+# created table with all my data (same as 2.1):
+summary_table <- results_long |>
+  group_by(dist, Estimator) |>
+  summarize(
+    mean_est = mean(Value),
+    bias = mean_est - true_variance,
+    precision = 1/var(Value),
+    MSE = bias^2 + var(Value)
+  )
+summary_table
+
+# created plots (almost the same as 2.1)
+make_plots <- function(y) {
+  ggplot(results_long[results_long$dist == y, ]) +
+    stat_density(aes(x = Value, color = Estimator),
+                 geom = "line", linewidth = 1, position="dodge") +
+    geom_vline(xintercept = true_variance, color = "red", linetype = "dotted") +
+    geom_hline(yintercept = 0) +
+    theme_bw() +
+    labs(title = y, x = "Variance Estimate", y = "Density") +
+    facet_wrap(~n, nrow = 1) # facet wrapped by n. Included nrow = 1 because the plots were too squished before.
+}
+
+p1 <- make_plots("poisson")
+p2 <- make_plots("binomial")
+p3 <- make_plots("normal")
+p4 <- make_plots("exponential")
+
+(p1 | p2) / (p3 | p4)
 
 ```
 
