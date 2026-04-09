@@ -334,9 +334,12 @@ p4 <- make_plots("exponential")
 
 ```
 
+As sample size increases, both estimators (although hard to see because the s2_n line is showing up behind the s2_n-1 line) improve their precision. Variance decreases for all four distributions as the distributions have higher density around the true variance as n increases. The bias of s2_n1 remains unbiased for all sample sizes of all four distributions. The bias of s2_n is slightly negatively biased in all four distributions, but decreases as n grows.
 
 ## Simulation
 You have written code to draw a random sample of various sizes from each distribution, and to calculate and store the calculated estimates. Rework your code to produce a density plot of the $s_{n-1}^2$ and $s_{n}^2$. Do you have a guess about their distribution? Ensure to set your randomization seed. 
+
+
 
 ## Bootstrap
 Now, take *one* sample from each distribution. Instead of drawing a random sample at each iteration, sample *with replacement* from the one sample. Produce a density plot of the $s_{n-1}^2$ and $s_{n}^2$. Do we get roughly the same information as we do in the full simulation? Try this over several seeds -- what do you notice? Ensure to set your randomization seed.
