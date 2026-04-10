@@ -525,5 +525,8 @@ ggplot(results_long) +
   labs(x = "Variance Estimate", y = "Density")
 ```
 
+In the 7272 seed, both the s2_n and s2_n-1 distributions were right skewed. The s2_n seems to be slightly further biased downwards than the s2_n-1 distribution. Unlike the full simulation in 2.3, the bootstrapping distributions are centered around the sample variance (around 1.4) as opposed to being centered around the population variance (2). When I used different seeds (I tried 735), the shapes of the distributions generally stayed the same but there seemed to be less spread and higher densities near the variances. Additionally, the center of some of the distributuions changed (poisson changed from being centered around 2.3 in the 7272 seed to about 1.2 in the 735 seed). I believe this is because each seed generates a different sample and the bootstrapping distribution reflects the distribution of that sample as opposed to the population.
+
+
 # Executive Summary
 Summarize the work you've done here to provide a brief (200-300 word) summary of the simulation and the results using your work in Lab 11. Your summary should be professional, clear, and all claims should be corroborated with statistical support.
